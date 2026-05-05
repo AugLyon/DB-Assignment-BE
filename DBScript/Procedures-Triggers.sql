@@ -44,7 +44,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM CARD WHERE Card_ID = p_Card_ID AND Is_Deleted = FALSE) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Update Error: The specified Card does not exist or was deleted.';
     END IF;
-    IF TRIM(p_New_Title) = '' THEN
+    IF p_New_Title is null or TRIM(p_New_Title) = '' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Update Error: Card title cannot be set to empty.';
     END IF;
     IF p_Is_Due_Complete = TRUE AND p_New_Due_Date IS NULL THEN
@@ -73,7 +73,7 @@ BEGIN
 
     IF is_blocker > 0 THEN
         SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'Delete Disallowed: This card is currently blocking other cards. You must remove dependencies before deleting.';
+        SET MESSAGE_TEXT = 'Delete Disallowed: Card is blocking others. Please remove dependencies first to maintain integrity.';
     END IF;
     
     DELETE FROM CARD_DEPENDENCY WHERE Blocked_Card_ID = p_Card_ID;
@@ -155,10 +155,10 @@ CREATE PROCEDURE GetListStatistics(
     IN p_Board_ID INT, 
     IN p_Min_Card_Count INT
 )
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM BOARD WHERE Board_ID = p_Board_ID AND Is_Deleted = FALSE) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Search Error: Board ID not found.';
-    END IF;
+begin
+	if not exists (select 1 from BOARD where Board_ID = p_Board_ID and Is_Deleted = False) then
+		signal sqlstate '45000' set MESSAGE_TEXT = 'Search Error: Board ID does not exist or was deleted.';
+	end if;
     SELECT 
         l.List_ID,
         l.List_Name,
@@ -174,7 +174,7 @@ END //
 
 CREATE FUNCTION GetCardProgress(p_Card_ID INT) 
 RETURNS DECIMAL(5,2)
-READS SQL DATA
+reads sql data
 BEGIN
     DECLARE v_done INT DEFAULT 0;
     DECLARE v_total INT DEFAULT 0;
@@ -189,6 +189,7 @@ BEGIN
         RETURN -1.00;
     END IF;
 
+    set v_finished = 0;
     OPEN cur_items;
 
     read_loop: LOOP
@@ -214,7 +215,7 @@ END //
 
 CREATE FUNCTION GetUserBoardEfficiency(p_User_ID INT, p_Board_ID INT) 
 RETURNS INT
-READS SQL DATA
+reads sql data
 BEGIN
     DECLARE v_assigned_count INT DEFAULT 0;
     DECLARE v_completed_count INT DEFAULT 0;
@@ -228,13 +229,13 @@ BEGIN
         JOIN LIST l ON c.List_ID = l.List_ID
         WHERE ca.User_ID = p_User_ID 
           AND l.Board_ID = p_Board_ID
-          AND c.Is_Deleted = FALSE;
+          AND c.Is_Deleted = FALSE; -- Exclude deleted cards from stats
 
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_finished = 1;
 
     IF NOT EXISTS (SELECT 1 FROM USER_ACCOUNT WHERE User_ID = p_User_ID) OR 
        NOT EXISTS (SELECT 1 FROM BOARD WHERE Board_ID = p_Board_ID AND Is_Deleted = FALSE) THEN
-        RETURN 0;
+        RETURN -1;
     END IF;
 
     OPEN cur_efficiency;
