@@ -94,7 +94,7 @@ BEGIN
     SELECT l.Board_ID INTO board_id
     FROM CARD c
     JOIN LIST l ON c.List_ID = l.List_ID 
-    WHERE c.Card_ID = NEW.Card_ID;
+    WHERE c.Card_ID = NEW.Card_ID AND c.Is_Deleted = FALSE;
 
     IF board_id IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Assignment Error: The specified Card does not exist.';
@@ -102,8 +102,7 @@ BEGIN
 
     SELECT COUNT(*) INTO is_member
     FROM BOARD_MEMBER
-    WHERE User_ID = NEW.User_ID and Board_ID = board_id
-    AND c.Is_Deleted = FALSE;
+    WHERE User_ID = NEW.User_ID and Board_ID = board_i;
     
     IF is_member = 0 THEN
         SIGNAL SQLSTATE '45000'
