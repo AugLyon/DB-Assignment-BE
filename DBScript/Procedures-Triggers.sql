@@ -102,7 +102,7 @@ BEGIN
 
     SELECT COUNT(*) INTO is_member
     FROM BOARD_MEMBER
-    WHERE User_ID = NEW.User_ID and Board_ID = board_i;
+    WHERE User_ID = NEW.User_ID and Board_ID = board_id;
     
     IF is_member = 0 THEN
         SIGNAL SQLSTATE '45000'
