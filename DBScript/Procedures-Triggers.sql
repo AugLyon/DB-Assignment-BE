@@ -95,10 +95,15 @@ BEGIN
     FROM CARD c
     JOIN LIST l ON c.List_ID = l.List_ID 
     WHERE c.Card_ID = NEW.Card_ID;
-    
+
+    IF board_id IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Assignment Error: The specified Card does not exist.';
+    END IF;
+
     SELECT COUNT(*) INTO is_member
     FROM BOARD_MEMBER
-    WHERE User_ID = NEW.User_ID and Board_ID = board_id;
+    WHERE User_ID = NEW.User_ID and Board_ID = board_id
+    AND c.Is_Deleted = FALSE;
     
     IF is_member = 0 THEN
         SIGNAL SQLSTATE '45000'
@@ -155,10 +160,10 @@ CREATE PROCEDURE GetListStatistics(
     IN p_Board_ID INT, 
     IN p_Min_Card_Count INT
 )
-begin
-	if not exists (select 1 from BOARD where Board_ID = p_Board_ID and Is_Deleted = False) then
-		signal sqlstate '45000' set MESSAGE_TEXT = 'Search Error: Board ID does not exist or was deleted.';
-	end if;
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM BOARD WHERE Board_ID = p_Board_ID AND Is_Deleted = FALSE) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Search Error: Board ID does not exist or was deleted.';
+    END IF;
     SELECT 
         l.List_ID,
         l.List_Name,
@@ -182,7 +187,7 @@ BEGIN
     DECLARE v_finished INT DEFAULT 0;
     
     DECLARE cur_items CURSOR FOR 
-        SELECT Is_Completed FROM CHECKLIST_ITEM WHERE Card_ID = p_Card_ID AND Is_Deleted = FALSE;
+        SELECT Is_Completed FROM CHECKLIST_ITEM WHERE Card_ID = p_Card_ID;
     
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_finished = 1;
     IF NOT EXISTS (SELECT 1 FROM CARD WHERE Card_ID = p_Card_ID AND Is_Deleted = FALSE) THEN
