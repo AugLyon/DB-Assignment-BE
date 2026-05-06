@@ -19,12 +19,15 @@ app.get('/api/workspaces', async (req, res) => {
 });
 app.post('/api/cards', async (req,res)=>{
     try{
-        const {title, name, description, listid,startdate, duedate}= req.body;
-        const [result] = await db.query('CALL InsertCard(?,?,?,?,?,?)', [title, name, description, startdate, duedate,listid]);
+        const {title, name, description, listId,startDate, dueDate}= req.body;
+        const [result] = await db.query('CALL InsertCard(?,?,?,?,?,?)', [title, name, description, startDate, dueDate,listId]);
         res.status(201).json({Message: "Card created successfully"});
     }
     catch(error){
-        res.status(400).json({error: error.message});
+        if (error.sqlState === '45000')
+            res.status(400).json({error: error.message});
+        else
+            res.status(500).json({ error: "Internal Server Error" });
     }
 });
 app.get('/api/boards/:id/cards', async (req, res) => {
@@ -33,7 +36,10 @@ app.get('/api/boards/:id/cards', async (req, res) => {
         const [results] = await db.query('CALL GetCardsByBoard(?)', [boardId]);
         res.json(results[0]);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
     }
 });
 app.get('/api/cards/:id/progress', async (req, res) => {
@@ -42,7 +48,10 @@ app.get('/api/cards/:id/progress', async (req, res) => {
         const [rows] = await db.query('SELECT GetCardProgress(?) AS progress', [cardId]);
         res.json(rows[0]);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
     }
 });
 app.put('/api/cards/:id', async (req, res) => {
@@ -53,7 +62,10 @@ app.put('/api/cards/:id', async (req, res) => {
         await db.query('CALL UpdateCard(?, ?, ?, ?)', [cardId, title, dueDate, isComplete]);
         res.json({ message: "Card updated successfully" });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
     }
 });
 app.delete('/api/cards/:id', async (req, res) => {
@@ -62,7 +74,10 @@ app.delete('/api/cards/:id', async (req, res) => {
         await db.query('CALL DeleteCard(?)', [cardId]);
         res.json({ message: "Card deleted successfully" });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
     }
 });
 app.get('/api/boards/:id/statistics', async (req, res) => {
@@ -72,10 +87,48 @@ app.get('/api/boards/:id/statistics', async (req, res) => {
         const [results] = await db.query('CALL GetListStatistics(?, ?)', [boardId, minCards]);
         res.json(results[0]);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
     }
 });
+app.get('/api/boards/:id/members', async (req, res) => {
+    try {
+        const boardId = req.params.id;
+        const [rows] = await db.query(`CALL GetUserByBoard(?)`, [boardId]);
+        res.json(rows[0]);
+    } catch (error) {
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+app.get('/api/boards/:id/assignments', async (req, res) => {
+    try {
+        const [rows] = await db.query(`CALL GetAssignmentByBoard(?)`, [req.params.id]);
+        res.json(rows[0]);
+    } catch (error) {
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+app.get('/api/users/:userId/boards/:boardId/efficiency', async (req, res) => {
+    try {
+        const { userId, boardId } = req.params;
 
+        const [rows] = await db.query('SELECT GetUserBoardEfficiency(?, ?) AS efficiencyScore',[userId, boardId]);
+        res.json(rows[0]);
+    } catch (error) {
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 app.post('/api/cards/:id/assignments', async (req, res) => {
     try {
         const cardId = req.params.id;
@@ -83,18 +136,46 @@ app.post('/api/cards/:id/assignments', async (req, res) => {
         await db.query('INSERT INTO CARD_ASSIGNMENT (User_ID, Card_ID) VALUES (?, ?)', [userId, cardId]);
         res.status(201).json({ message: "Assigned successfully" });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
-app.post('/api/cards/:id/dependencies', async (req, res) => {
+app.get('/api/cards/:id/checklists', async (req, res) => {
     try {
-        const blockerCardId = req.params.id;
-        const { blockedCardId } = req.body;
-        await db.query('INSERT INTO CARD_DEPENDENCY (Blocked_Card_ID, Blocker_Card_ID) VALUES (?, ?)', [blockedCardId, blockerCardId]);
-        res.status(201).json({ message: "Dependency created successfully" });
+        const [rows] = await db.query('SELECT * FROM CHECKLIST_ITEM WHERE Card_ID = ? AND Is_Deleted = FALSE', [req.params.id]);
+        res.json(rows);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+app.post('/api/cards/:id/checklists', async (req, res) => {
+    try {
+        const cardId = req.params.id;
+        const {content,checklistId} = req.body;
+        await db.query('CALL InsertChecklistItem(?,?,?)',[cardId,checklistId,content])
+        res.status(201).json({ message: "Checklist item added" });
+    } catch (error) {
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+app.put('/api/checklists/:itemId', async (req, res) => {
+    try {
+        const { cardId, checklistId, isComplete } = req.body;
+        await db.query('CALL ToggleChecklistItem(?, ?, ?, ?)', [cardId, checklistId, req.params.itemId, isComplete]);
+        res.json({ message: "Checklist updated" });
+    } catch (error) {
+        if (error.sqlState === '45000')
+            res.status(400).json({ error: error.message });
+        else
+            res.status(500).json({ error: "Internal Server Error" });
     }
 });
 app.listen(PORT, () => {
