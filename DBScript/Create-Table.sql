@@ -150,7 +150,6 @@ CREATE TABLE LIST (
 CREATE TABLE CARD (
     Card_ID INT AUTO_INCREMENT PRIMARY KEY,
     Card_Title VARCHAR(255) NOT NULL,
-    Card_Name VARCHAR(255),
     Description TEXT,
     Start_Date DATETIME,
     Due_Date DATETIME,

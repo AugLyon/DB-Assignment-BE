@@ -18,7 +18,6 @@ DELIMITER //
 
 CREATE PROCEDURE InsertCard(
     IN p_Card_Title VARCHAR(255),
-    IN p_Card_Name VARCHAR(255),
     IN p_Description TEXT,
     IN p_Start_Date DATETIME,
     IN p_Due_Date DATETIME,
@@ -34,8 +33,8 @@ BEGIN
     IF p_Start_Date IS NOT NULL AND p_Due_Date IS NOT NULL AND p_Due_Date < p_Start_Date THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Validation Error: Due Date cannot be earlier than Start Date.';
     END IF;
-    INSERT INTO CARD (Card_Title, Card_Name, Description, Start_Date, Due_Date, List_ID)
-    VALUES (p_Card_Title, p_Card_Name, p_Description, p_Start_Date, p_Due_Date, p_List_ID);
+    INSERT INTO CARD (Card_Title, Description, Start_Date, Due_Date, List_ID)
+    VALUES (p_Card_Title, p_Description, p_Start_Date, p_Due_Date, p_List_ID);
 END //
 
 CREATE PROCEDURE UpdateCard(

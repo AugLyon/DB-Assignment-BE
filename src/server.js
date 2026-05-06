@@ -17,15 +17,15 @@ app.get('/api/workspaces', async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-app.post('/api/cards', async (req,res)=>{
-    try{
-        const {title, name, description, listId,startDate, dueDate}= req.body;
-        const [result] = await db.query('CALL InsertCard(?,?,?,?,?,?)', [title, name, description, startDate, dueDate,listId]);
-        res.status(201).json({Message: "Card created successfully"});
+app.post('/api/cards', async (req, res) => {
+    try {
+        const { title, description, listId, startDate, dueDate } = req.body;
+        const [result] = await db.query('CALL InsertCard(?,?,?,?,?)', [title, description, startDate, dueDate, listId]);
+        res.status(201).json({ Message: "Card created successfully" });
     }
-    catch(error){
+    catch (error) {
         if (error.sqlState === '45000')
-            res.status(400).json({error: error.message});
+            res.status(400).json({ error: error.message });
         else
             res.status(500).json({ error: "Internal Server Error" });
     }
@@ -120,7 +120,7 @@ app.get('/api/users/:userId/boards/:boardId/efficiency', async (req, res) => {
     try {
         const { userId, boardId } = req.params;
 
-        const [rows] = await db.query('SELECT GetUserBoardEfficiency(?, ?) AS efficiencyScore',[userId, boardId]);
+        const [rows] = await db.query('SELECT GetUserBoardEfficiency(?, ?) AS efficiencyScore', [userId, boardId]);
         res.json(rows[0]);
     } catch (error) {
         if (error.sqlState === '45000')
@@ -156,8 +156,8 @@ app.get('/api/cards/:id/checklists', async (req, res) => {
 app.post('/api/cards/:id/checklists', async (req, res) => {
     try {
         const cardId = req.params.id;
-        const {content,checklistId} = req.body;
-        await db.query('CALL InsertChecklistItem(?,?,?)',[cardId,checklistId,content])
+        const { content, checklistId } = req.body;
+        await db.query('CALL InsertChecklistItem(?,?,?)', [cardId, checklistId, content])
         res.status(201).json({ message: "Checklist item added" });
     } catch (error) {
         if (error.sqlState === '45000')

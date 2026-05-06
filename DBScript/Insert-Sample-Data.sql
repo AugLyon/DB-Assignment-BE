@@ -107,12 +107,12 @@ INSERT INTO LIST (List_Name, Position, Board_ID) VALUES
 ('Drafts', 1, 2),
 ('Published', 2, 2);
 
-INSERT INTO CARD (Card_Title, Card_Name, Description, Start_Date, Due_Date, List_ID) VALUES
-('Setup Database Schema', 'Task-1', 'Create SQL tables', '2023-11-01 09:00:00', '2023-11-05 17:00:00', 1),
-('Write API Endpoints', 'Task-2', 'RESTful API in Node.js', '2023-11-03 10:00:00', '2023-11-10 17:00:00', 1),
-('Fix Login Bug', 'Task-3', 'Users cannot reset password', '2023-11-02 08:00:00', '2023-11-04 12:00:00', 2),
-('Write SEO Blog', 'Content-1', 'Target keywords: tech, code', '2023-11-01 09:00:00', '2023-11-15 17:00:00', 4),
-('Deploy to Production', 'Task-4', 'Push v1.2 to AWS', '2023-11-12 22:00:00', '2023-11-13 02:00:00', 1);
+INSERT INTO CARD (Card_Title, Description, Start_Date, Due_Date, List_ID) VALUES
+('Setup Database Schema', 'Create SQL tables', '2023-11-01 09:00:00', '2023-11-05 17:00:00', 1),
+('Write API Endpoints', 'RESTful API in Node.js', '2023-11-03 10:00:00', '2023-11-10 17:00:00', 1),
+('Fix Login Bug', 'Users cannot reset password', '2023-11-02 08:00:00', '2023-11-04 12:00:00', 2),
+('Write SEO Blog', 'Target keywords: tech, code', '2023-11-01 09:00:00', '2023-11-15 17:00:00', 4),
+('Deploy to Production', 'Push v1.2 to AWS', '2023-11-12 22:00:00', '2023-11-13 02:00:00', 1);
 
 INSERT INTO CARD_ASSIGNMENT (User_ID, Card_ID) VALUES
 (6, 1),
