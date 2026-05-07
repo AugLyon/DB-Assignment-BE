@@ -151,8 +151,8 @@ BEGIN
     DECLARE v_total INT DEFAULT 0;
     DECLARE v_completed INT DEFAULT 0;
 
-    IF EXISTS (SELECT 1 FROM CARD WHERE Card_ID = p_Card_ID AND Is_Deleted = TRUE) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Insert error: Card is deleted.';
+    IF NOT EXISTS (SELECT 1 FROM CARD WHERE Card_ID = p_Card_ID AND Is_Deleted = FALSE) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Insert error: Card not found.';
     END IF;
 
     UPDATE CHECKLIST_ITEM 
@@ -176,8 +176,8 @@ BEGIN
     DECLARE v_Max_Item_ID INT;
     DECLARE v_Next_Item_ID INT;
 
-    IF EXISTS (SELECT 1 FROM CARD WHERE Card_ID = p_Card_ID AND Is_Deleted = TRUE) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Insert error: Card is deleted.';
+    IF NOT EXISTS (SELECT 1 FROM CARD WHERE Card_ID = p_Card_ID AND Is_Deleted = FALSE) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Insert error: Card not found.';
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM CHECKLIST WHERE Checklist_ID = p_Checklist_ID AND Card_ID = p_Card_ID AND Is_Deleted = FALSE ) THEN
