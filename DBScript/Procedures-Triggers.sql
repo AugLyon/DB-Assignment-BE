@@ -2,9 +2,17 @@
 DROP PROCEDURE IF EXISTS InsertCard;
 DROP PROCEDURE IF EXISTS UpdateCard;
 DROP PROCEDURE IF EXISTS DeleteCard;
+
 DROP TRIGGER IF EXISTS Before_Insert_Card_Assignment;
 DROP TRIGGER IF EXISTS Before_Insert_Card_Duration;
 DROP TRIGGER IF EXISTS trg_Before_Update_Card_Duration;
+DROP TRIGGER IF EXISTS trg_After_Update_Board_Member;
+DROP TRIGGER IF EXISTS trg_After_Delete_Board_Member;
+DROP TRIGGER IF EXISTS trg_Before_Update_Comment;
+DROP TRIGGER IF EXISTS trg_Before_Insert_Card_Label_Assignment;
+DROP TRIGGER IF EXISTS trg_Before_Update_Card_Label_Assignment;
+DROP TRIGGER IF EXISTS trg_Before_Update_Card;
+
 DROP PROCEDURE IF EXISTS GetCardsByBoard;
 DROP PROCEDURE IF EXISTS GetListStatistics;
 DROP PROCEDURE IF EXISTS GetUserByBoard;
@@ -76,7 +84,7 @@ BEGIN
 
     IF is_blocker > 0 THEN
         SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'Delete Disallowed: Card is blocking others. Please remove dependencies first to maintain integrity.';
+        SET MESSAGE_TEXT = 'Delete Disallowed: Card is blocking others. Please remove dependencies first.';
     END IF;
     
     DELETE FROM CARD_DEPENDENCY WHERE Blocked_Card_ID = p_Card_ID;
@@ -142,6 +150,105 @@ BEGIN
             END IF;
         ELSE
             SET NEW.Duration = NULL;
+        END IF;
+    END IF;
+END //
+
+CREATE TRIGGER trg_After_Update_Board_Member
+AFTER UPDATE ON BOARD_MEMBER
+FOR EACH ROW
+BEGIN
+    DECLARE admin_count INT;
+    IF OLD.Role = 'Admin' AND (NEW.Role = 'Member' OR NEW.Is_Deleted = TRUE) THEN
+        SELECT COUNT(*) INTO admin_count
+        FROM BOARD_MEMBER
+        WHERE Board_ID = NEW.Board_ID AND Role = 'Admin' AND Is_Deleted = FALSE; 
+        IF admin_count = 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'A Board must have at least 1 Admin';
+        END IF;
+    END IF;
+END //
+CREATE TRIGGER trg_After_Delete_Board_Member
+AFTER DELETE ON BOARD_MEMBER
+FOR EACH ROW
+BEGIN
+    DECLARE admin_count INT;
+    IF OLD.Role = 'Admin' THEN
+        SELECT COUNT(*) INTO admin_count
+        FROM BOARD_MEMBER
+        WHERE Board_ID = NEW.Board_ID AND Role = 'Admin' AND Is_Deleted = FALSE; 
+        IF admin_count = 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'A Board must have at least 1 Admin';
+        END IF;
+    END IF;
+END //
+
+CREATE TRIGGER trg_Before_Update_Comment
+BEFORE UPDATE ON COMMENT
+FOR EACH ROW
+BEGIN
+    IF NOT (OLD.Content <=> NEW.Content) THEN
+        SET NEW.Is_Edited = TRUE;
+    END IF;
+END //
+
+CREATE TRIGGER trg_Before_Insert_Card_Label_Assignment
+BEFORE INSERT ON CARD_LABEL_ASSIGNMENT
+FOR EACH ROW
+BEGIN
+    DECLARE v_Board_ID INT;
+    DECLARE v_Label_Board_ID INT;
+    SELECT l.Board_ID INTO v_Board_ID
+    FROM CARD c 
+    JOIN LIST l ON c.List_ID = l.List_ID
+    WHERE c.Card_ID = NEW.Card_ID;
+
+    SELECT Board_ID INTO v_Label_Board_ID
+    FROM LABEL
+    WHERE Label_ID = NEW.Label_ID;
+
+    IF (v_Board_ID != v_Label_Board_ID) THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Label scope error: Cannot assign label from another board.';
+    END IF;  
+END //
+
+CREATE TRIGGER trg_Before_Update_Card_Label_Assignment
+BEFORE UPDATE ON CARD_LABEL_ASSIGNMENT
+FOR EACH ROW
+BEGIN
+    DECLARE v_Board_ID INT;
+    DECLARE v_Label_Board_ID INT;
+
+    IF OLD.Card_ID != NEW.Card_ID OR OLD.Label_ID != NEW.Label_ID THEN
+
+        SELECT l.Board_ID INTO v_Board_ID
+        FROM CARD c 
+        JOIN LIST l ON c.List_ID = l.List_ID
+        WHERE c.Card_ID = NEW.Card_ID;
+
+        SELECT Board_ID INTO v_Label_Board_ID
+        FROM LABEL
+        WHERE Label_ID = NEW.Label_ID;
+
+        IF (v_Board_ID != v_Label_Board_ID) THEN
+          SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Label scope error: Cannot update assignment with a label from another board.';
+        END IF;  
+        
+    END IF;
+END //
+
+CREATE TRIGGER trg_Before_Update_Card
+BEFORE UPDATE ON CARD
+FOR EACH ROW
+BEGIN
+    IF NOT (OLD.Cover_Attachment_ID <=> NEW.Cover_Attachment_ID) THEN
+        DECLARE v_Attachment_Card_ID INT;
+        SELECT a.Card_ID INTO v_Attachment_Card_ID
+        FROM ATTACHMENT a
+        WHERE Attachment_ID = NEW.Cover_Attachment_ID;
+
+        IF(v_Attachment_Card_ID != NEW.Card_ID)
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Attachment scope error: Attachment do not belong to this card.';
         END IF;
     END IF;
 END //

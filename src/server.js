@@ -13,7 +13,6 @@ app.get('/api/workspaces', async (req, res) => {
         const [rows] = await db.query('SELECT * FROM WORKSPACE WHERE Is_Deleted = FALSE');
         res.json(rows);
     } catch (error) {
-        console.error("Error fetching workspaces:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
@@ -83,7 +82,7 @@ app.delete('/api/cards/:id', async (req, res) => {
 app.get('/api/boards/:id/statistics', async (req, res) => {
     try {
         const boardId = req.params.id;
-        const minCards = req.query.minCards || 0;
+        const minCards = parseInt(req.query.minCards) || 0;
         const [results] = await db.query('CALL GetListStatistics(?, ?)', [boardId, minCards]);
         res.json(results[0]);
     } catch (error) {
@@ -133,7 +132,7 @@ app.post('/api/cards/:id/assignments', async (req, res) => {
     try {
         const cardId = req.params.id;
         const { userId } = req.body;
-        await db.query('INSERT INTO CARD_ASSIGNMENT (User_ID, Card_ID) VALUES (?, ?)', [userId, cardId]);
+        await db.query('INSERT INTO CARD_ASSIGNMENT (User_ID, Card_ID) VALUES (?, ?) ON DUPLICATE KEY UPDATE Is_Deleted = FALSE', [userId, cardId]);
         res.status(201).json({ message: "Assigned successfully" });
     } catch (error) {
         if (error.sqlState === '45000')

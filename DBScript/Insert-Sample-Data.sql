@@ -73,11 +73,11 @@ INSERT INTO FREE_USER (User_ID, Ad_Tracking_ID, Storage_Limit) VALUES
 (5, 'track_mno345', 500);
 
 INSERT INTO PRO_USER (User_ID, Payment_Method, Next_Billing_Date) VALUES
-(6, 'Visa ending 1234', '2024-01-15 00:00:00'),
-(7, 'Mastercard ending 5678', '2024-01-20 00:00:00'),
-(8, 'PayPal', '2024-02-01 00:00:00'),
-(9, 'Amex ending 9012', '2024-02-10 00:00:00'),
-(10, 'Apple Pay', '2024-03-05 00:00:00');
+(6, 'Visa ending 1234', '2026-01-15 00:00:00'),
+(7, 'Mastercard ending 5678', '2026-01-20 00:00:00'),
+(8, 'PayPal', '2026-02-01 00:00:00'),
+(9, 'Amex ending 9012', '2026-02-10 00:00:00'),
+(10, 'Apple Pay', '2026-03-05 00:00:00');
 
 INSERT INTO WORKSPACE (Name, Description, Owner_ID) VALUES
 ('Development Team', 'Software engineering projects', 6),
@@ -89,7 +89,7 @@ INSERT INTO WORKSPACE (Name, Description, Owner_ID) VALUES
 INSERT INTO BOARD (Board_Title, Visibility_Status, Workspace_ID, Total_Members) VALUES
 ('Sprint 42', 'Private', 1, 2),
 ('Q4 Ad Campaign', 'Workspace', 2, 1),
-('New Hires 2024', 'Private', 3, 1),
+('New Hires 2026', 'Private', 3, 1),
 ('Weekly Chores', 'Public', 4, 1),
 ('Mobile App Redesign', 'Workspace', 5, 1);
 
@@ -108,11 +108,11 @@ INSERT INTO LIST (List_Name, Position, Board_ID) VALUES
 ('Published', 2, 2);
 
 INSERT INTO CARD (Card_Title, Description, Start_Date, Due_Date, List_ID) VALUES
-('Setup Database Schema', 'Create SQL tables', '2023-11-01 09:00:00', '2023-11-05 17:00:00', 1),
-('Write API Endpoints', 'RESTful API in Node.js', '2023-11-03 10:00:00', '2023-11-10 17:00:00', 1),
-('Fix Login Bug', 'Users cannot reset password', '2023-11-02 08:00:00', '2023-11-04 12:00:00', 2),
-('Write SEO Blog', 'Target keywords: tech, code', '2023-11-01 09:00:00', '2023-11-15 17:00:00', 4),
-('Deploy to Production', 'Push v1.2 to AWS', '2023-11-12 22:00:00', '2023-11-13 02:00:00', 1);
+('Setup Database Schema', 'Create SQL tables', '2025-11-01 09:00:00', '2025-11-05 17:00:00', 1),
+('Write API Endpoints', 'RESTful API in Node.js', '2025-11-03 10:00:00', '2025-11-10 17:00:00', 1),
+('Fix Login Bug', 'Users cannot reset password', '2025-11-02 08:00:00', '2025-11-04 12:00:00', 2),
+('Write SEO Blog', 'Target keywords: tech, code', '2025-11-01 09:00:00', '2025-11-15 17:00:00', 4),
+('Deploy to Production', 'Push v1.2 to AWS', '2025-11-12 22:00:00', '2025-11-13 02:00:00', 1);
 
 INSERT INTO CARD_ASSIGNMENT (User_ID, Card_ID) VALUES
 (6, 1),
@@ -156,12 +156,12 @@ INSERT INTO CHECKLIST_ITEM (Card_ID, Checklist_ID, Item_ID, Content, Is_Complete
 (3, 1, 1, 'Test with wrong password', TRUE),
 (4, 1, 1, 'Use word "software"', FALSE);
 
-INSERT INTO ATTACHMENT (Card_ID, Attachment_ID, File_Name, File_Url, File_Type, User_ID) VALUES
-(1, 1, 'schema_diagram.png', 'https://s3.aws.com/files/schema.png', 'image/png', 6),
-(2, 1, 'api_docs.pdf', 'https://s3.aws.com/files/docs.pdf', 'application/pdf', 1),
-(3, 1, 'error_log.txt', 'https://s3.aws.com/files/error.txt', 'text/plain', 6),
-(4, 1, 'draft_v1.docx', 'https://s3.aws.com/files/draft.docx', 'application/msword', 7),
-(5, 1, 'deployment_guide.pdf', 'https://s3.aws.com/files/deploy.pdf', 'application/pdf', 6);
+INSERT INTO ATTACHMENT (Card_ID,  File_Name, File_Url, File_Type, User_ID) VALUES
+(1, 'schema_diagram.png', 'https://s3.aws.com/files/schema.png', 'image/png', 6),
+(2,'api_docs.pdf', 'https://s3.aws.com/files/docs.pdf', 'application/pdf', 1),
+(3,'error_log.txt', 'https://s3.aws.com/files/error.txt', 'text/plain', 6),
+(4, 'draft_v1.docx', 'https://s3.aws.com/files/draft.docx', 'application/msword', 7),
+(5, 'deployment_guide.pdf', 'https://s3.aws.com/files/deploy.pdf', 'application/pdf', 6);
 
 INSERT INTO COMMENT (Card_ID, Comment_ID, Content, User_ID) VALUES
 (1, 1, 'I will start working on this today.', 6),
@@ -171,7 +171,7 @@ INSERT INTO COMMENT (Card_ID, Comment_ID, Content, User_ID) VALUES
 (4, 1, 'Draft is 50% complete.', 7);
 
 UPDATE CARD SET Cover_Attachment_ID = 1 WHERE Card_ID = 1;
-UPDATE CARD SET Cover_Attachment_ID = 1 WHERE Card_ID = 2;
-UPDATE CARD SET Cover_Attachment_ID = 1 WHERE Card_ID = 3;
-UPDATE CARD SET Cover_Attachment_ID = 1 WHERE Card_ID = 4;
-UPDATE CARD SET Cover_Attachment_ID = 1 WHERE Card_ID = 5; 
+UPDATE CARD SET Cover_Attachment_ID = 2 WHERE Card_ID = 2;
+UPDATE CARD SET Cover_Attachment_ID = 3 WHERE Card_ID = 3;
+UPDATE CARD SET Cover_Attachment_ID = 4 WHERE Card_ID = 4;
+UPDATE CARD SET Cover_Attachment_ID = 5 WHERE Card_ID = 5;
