@@ -301,25 +301,18 @@ BEGIN
     VALUES (p_Card_ID, p_Checklist_ID, v_Next_Item_ID, p_Content, FALSE);
 END //
 
-Ah, got it! That makes a lot more sense for a project management dashboard. You want to filter cards that fall within a specific date range.
-
-We can apply the exact same IS NULL trick, but we will use it for both the Start_Date and Due_Date to create a flexible time window.
-
-Here is the updated procedure. I have swapped out the duration parameter for p_Start_Time and p_End_Time:
-
-SQL
-DELIMITER //
-
 CREATE PROCEDURE GetCardsByBoard(
     IN p_Board_ID INT,
     IN p_Start_Time DATETIME,
     IN p_End_Time DATETIME
 )
 BEGIN
+    -- 1. Validate Board Existence
     IF NOT EXISTS (SELECT 1 FROM BOARD WHERE Board_ID = p_Board_ID AND Is_Deleted = FALSE) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Search Error: Board ID not found.';
     END IF;
 
+    -- 2. Query Cards within Timeframe
     SELECT 
         b.Board_Title,
         l.List_Name,
@@ -332,13 +325,14 @@ BEGIN
     FROM CARD c
     JOIN LIST l ON c.List_ID = l.List_ID
     JOIN BOARD b ON l.Board_ID = b.Board_ID
-    WHERE b.Board_ID = p_Board_ID AND c.Is_Deleted = FALSE AND l.Is_Deleted = FALSE
+    WHERE b.Board_ID = p_Board_ID 
+      AND c.Is_Deleted = FALSE 
+      AND l.Is_Deleted = FALSE
+      -- NEW: Timeframe filters
       AND (p_Start_Time IS NULL OR c.Start_Date >= p_Start_Time)
       AND (p_End_Time IS NULL OR c.Due_Date <= p_End_Time)
     ORDER BY l.Position ASC, c.Card_Title ASC;
 END //
-
-DELIMITER ;
 
 CREATE PROCEDURE GetListStatistics(
     IN p_Board_ID INT, 
@@ -445,7 +439,7 @@ BEGIN
           AND c.Is_Deleted = FALSE
           AND ca.Is_Deleted = FALSE
           AND l.Is_Deleted = FALSE
-          AND c.Due_Date IS NOT NULL
+          AND c.Due_Date IS NOT NULL;
 
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_finished = 1;
 
