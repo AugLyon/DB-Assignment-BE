@@ -427,7 +427,8 @@ BEGIN
           AND l.Board_ID = p_Board_ID
           AND c.Is_Deleted = FALSE
           AND ca.Is_Deleted = FALSE
-          AND l.Is_Deleted = FALSE;
+          AND l.Is_Deleted = FALSE
+          AND c.Due_Date IS NOT NULL
 
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_finished = 1;
 
