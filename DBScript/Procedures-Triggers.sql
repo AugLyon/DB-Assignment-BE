@@ -176,7 +176,7 @@ BEGIN
     IF OLD.Role = 'Admin' THEN
         SELECT COUNT(*) INTO admin_count
         FROM BOARD_MEMBER
-        WHERE Board_ID = NEW.Board_ID AND Role = 'Admin' AND Is_Deleted = FALSE; 
+        WHERE Board_ID = OLD.Board_ID AND Role = 'Admin' AND Is_Deleted = FALSE; 
         IF admin_count = 0 THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'A Board must have at least 1 Admin';
         END IF;
@@ -241,13 +241,13 @@ CREATE TRIGGER trg_Before_Update_Card
 BEFORE UPDATE ON CARD
 FOR EACH ROW
 BEGIN
+	DECLARE v_Attachment_Card_ID INT;
     IF NOT (OLD.Cover_Attachment_ID <=> NEW.Cover_Attachment_ID) THEN
-        DECLARE v_Attachment_Card_ID INT;
         SELECT a.Card_ID INTO v_Attachment_Card_ID
         FROM ATTACHMENT a
         WHERE Attachment_ID = NEW.Cover_Attachment_ID;
 
-        IF(v_Attachment_Card_ID != NEW.Card_ID)
+        IF(v_Attachment_Card_ID != NEW.Card_ID) THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Attachment scope error: Attachment do not belong to this card.';
         END IF;
     END IF;
