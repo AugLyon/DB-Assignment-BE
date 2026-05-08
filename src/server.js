@@ -32,7 +32,9 @@ app.post('/api/cards', async (req, res) => {
 app.get('/api/boards/:id/cards', async (req, res) => {
     try {
         const boardId = req.params.id;
-        const [results] = await db.query('CALL GetCardsByBoard(?)', [boardId]);
+        const startTime = req.query.startTime || null;
+        const endTime = req.query.endTime || null;
+        const [results] = await db.query('CALL GetCardsByBoard(?,?,?)', [boardId, startTime, endTime]);
         res.json(results[0]);
     } catch (error) {
         if (error.sqlState === '45000')
